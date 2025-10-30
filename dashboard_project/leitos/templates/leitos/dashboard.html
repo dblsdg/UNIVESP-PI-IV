@@ -1,0 +1,77 @@
+{% extends "leitos/base.html" %}
+{% load static %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-4">
+      <label>Região</label>
+      <select id="filter-zone" class="form-control">
+        <option value="">Todas as Regiões</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label>CEP (Prefixo)</label>
+      <input id="filter-cep" class="form-control" placeholder="Ex: 01001"/>
+    </div>
+    <div class="col-md-4 d-flex align-items-end gap-2">
+      <button id="btn-apply" class="btn btn-primary btn-sm">Aplicar Filtros</button>
+      <button id="btn-clear" class="btn btn-secondary btn-sm">Limpar Filtros</button>
+      <button id="btn-export" class="btn btn-success btn-sm">Exportar CSV</button>
+    </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12 mb-4">
+    <div class="card p-3">
+      <h6>Distribuição de Leitos Hospitalares por Região</h6>
+      <div id="chart-zona-leitos" style="height:360px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12 mb-4">
+      <div class="card p-3">
+          <h6>Distribuição de Leitos SUS (Especialidades) por Região</h6>
+          <div id="chart-zona-especialidades" style="height:360px;"></div>
+      </div>
+  </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card p-3">
+            <h6>Tendência Mensal de Leitos Totais x Leitos SUS por Região</h6>
+            <div id="chart-evolucao-leitos" style="height:420px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">Relação de Hospitais por Região</h6>
+        <div>
+          <small id="table-info" class="text-muted"></small>
+        </div>
+      </div>
+      <div id="table-estabs" class="table-responsive"></div>
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <div>
+          <button id="prev-page" class="btn btn-sm btn-light">Anterior</button>
+          <button id="next-page" class="btn btn-sm btn-light">Próxima</button>
+        </div>
+        <div>
+          <label class="me-2">Linhas por página:</label>
+          <select id="select-page-size" class="form-select d-inline-block" style="width: auto;">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
