@@ -179,6 +179,49 @@ def api_evolucao_leitos(request):
 
     return JsonResponse(grouped.to_dict(orient="records"), safe=False)
 
+
+# API: Taxa Média de Ocupação SUS (%) por Região
+def api_taxa_ocupacao_sus(request):
+
+    if DF is None:
+        return JsonResponse({"error": "Dados não carregados"}, status=500)
+
+    zone_col = _col("zone")
+    leitos_exist_col = _col("leitos_exist")
+    leitos_sus_col = _col("leitos_sus")
+
+    if not zone_col or not leitos_exist_col or not leitos_sus_col:
+        return JsonResponse({"error": "Colunas obrigatórias ausentes"}, status=400)
+
+    df = _apply_filters(DF.copy(), request)
+
+    # Converter colunas numéricas
+    for col in [leitos_exist_col, leitos_sus_col]:
+        df[col] = pd.to_numeric(
+            df[col].astype(str).str.replace(r"[^\d\-\.]", "", regex=True),
+            errors="coerce"
+        ).fillna(0)
+
+    # Agrupar por zona
+    grouped = (
+        df.groupby(zone_col, as_index=False)
+        .agg({leitos_exist_col: "sum", leitos_sus_col: "sum"})
+    )
+
+    # Calcular taxa
+    # Fórmula: (Leitos SUS / Leitos Existentes) * 100
+    grouped["taxa_ocupacao_sus"] = grouped.apply(
+        lambda x: round((x[leitos_sus_col] / x[leitos_exist_col]) * 100, 2)
+        if x[leitos_exist_col] > 0 else 0,
+        axis=1
+    )
+
+    grouped = grouped.rename(columns={zone_col: "zone"})
+    grouped = grouped.sort_values("zone")
+
+    return JsonResponse(grouped.to_dict(orient="records"), safe=False)
+
+
 # API: Estabelecimentos (Tabela com Paginação e Export)
 def api_estabelecimentos_table(request):
     if DF is None:

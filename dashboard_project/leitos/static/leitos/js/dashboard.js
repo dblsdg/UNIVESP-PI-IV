@@ -13,7 +13,7 @@ async function safeFetch(path) {
   }
 }
 
-// Gráficos
+// Gráfico 1: Distribuição de Leitos Hospitalares por Região
 async function drawZonaLeitos(cep = "", zona = "") {
   let url = '/api/zona_leitos/';
   const params = new URLSearchParams();
@@ -35,6 +35,7 @@ async function drawZonaLeitos(cep = "", zona = "") {
   } catch(e) { console.error("Erro ao carregar gráfico de leitos existentes x leitos SUS:", e); }
 }
 
+// Gráfico 2: Distribuição de Leitos SUS (Especialidades) por Região
 async function drawZonaEspecialidades(cep = "", zona = "") {
   let url = '/api/zona_especialidades/';
   const params = new URLSearchParams();
@@ -66,6 +67,7 @@ async function drawZonaEspecialidades(cep = "", zona = "") {
   } catch(e) { console.error("Erro ao carregar dados de especialidades UTIs:", e); }
 }
 
+// Gráfico 3: Tendência Mensal de Leitos Totais x Leitos SUS por Região
 async function drawGraficoEvolucaoLeitos(cep = "", zona = "") {
   let url = '/api/evolucao_leitos/';
   const params = new URLSearchParams();
@@ -107,14 +109,63 @@ async function drawGraficoEvolucaoLeitos(cep = "", zona = "") {
 
     const layout={title:'Evolução Mensal de Leitos Totais x Leitos SUS por Região',xaxis:{title:'Mês / Ano',tickangle:-30},yaxis:{title:'Quantidade de Leitos'},height:430,hovermode:'x unified',legend:{orientation:"h",y:-0.25},margin:{t:60,b:80}};
     Plotly.newPlot('chart-evolucao-leitos',traces,layout,{responsive:true});
-  } catch(e){console.error("Erro ao carregar gráfico de evolução:", e); document.getElementById('chart-evolucao-leitos').innerHTML="Erro ao carregar gráfico de evolução";}
+  } catch(e) {
+    console.error("Erro ao carregar gráfico de evolução:", e);
+    document.getElementById('chart-evolucao-leitos').innerHTML="Erro ao carregar gráfico de evolução";}
 }
+
+
+// Gráfico 4: Taxa Média de Ocupação SUS (%) por Região
+async function drawGraficoTaxaOcupacaoSUS(cep = "", zona = "") {
+  let url = '/api/taxa_ocupacao_sus/';
+  const params = new URLSearchParams();
+  if (cep) params.append('cep', cep);
+  if (zona) params.append('zone', zona);
+  if ([...params].length) url += '?' + params.toString();
+
+  try {
+    const data = await safeFetch(url);
+    const registros = Array.isArray(data) ? data : [];
+
+    if (!registros.length) {
+      document.getElementById('chart-taxa-ocupacao-sus').innerHTML = "Nenhum dado encontrado";
+      return;
+    }
+
+    const zonas = registros.map(d => d.zone);
+    const taxas = registros.map(d => d.taxa_ocupacao_sus);
+
+    const trace = {
+      x: zonas,
+      y: taxas,
+      type: 'bar',
+      marker: { color: '#2ca02c' },
+      text: taxas.map(v => v.toFixed(1) + '%'),
+      textposition: 'auto'
+    };
+
+    const layout = {
+      title: 'Taxa Média de Ocupação SUS (%) por Região',
+      xaxis: { title: 'Região' },
+      yaxis: { title: 'Taxa de Ocupação (%)', range: [0, 100] },
+      height: 400,
+      margin: { t: 60, b: 80 }
+    };
+
+    Plotly.newPlot('chart-taxa-ocupacao-sus', [trace], layout, { responsive: true });
+  } catch (e) {
+    console.error("Erro ao carregar gráfico de taxa SUS:", e);
+    document.getElementById('chart-taxa-ocupacao-sus').innerHTML = "Erro ao carregar gráfico taxa média de ocupação SUS (%) por região";
+  }
+}
+
 
 // Inicialização
 function inicializarGraficos(cep="", zona="") {
   drawZonaLeitos(cep,zona);
   drawZonaEspecialidades(cep,zona);
   drawGraficoEvolucaoLeitos(cep,zona);
+  drawGraficoTaxaOcupacaoSUS(cep,zona);
 }
 
 // Tabela
@@ -226,9 +277,8 @@ document.getElementById("btn-export").addEventListener("click", async () => {
 // Filtros e inicialização
 document.addEventListener("DOMContentLoaded", async function () {
   const filterZona = document.getElementById("filter-zone");
-  const filterCep = document.getElementById("filter-cep");
 
-  // Preenche as opções de Regiões
+  // Preenche as opções de regiões
   try {
     const data = await safeFetch("/api/filters/");
     const zones = data.zones || [];

@@ -88,7 +88,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    BASE_DIR / "dashboard_project" / "leitos" / "static",
+    BASE_DIR / "leitos" / "static",
 ]
 
 # ==========================================================
